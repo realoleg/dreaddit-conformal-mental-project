@@ -1,0 +1,19 @@
+[project]
+name = "dreaddit-conformal-mental-project"
+version = "0.1.0"
+description = "Uncertainty-aware transformer text classification on Dreaddit corpus with conformal prediction under degraded input."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "accelerate>=1.13.0",
+    "datasets",
+    "jupyter",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pyyaml",
+    "scikit-learn",
+    "torch",
+    "tqdm",
+    "transformers",
+]
