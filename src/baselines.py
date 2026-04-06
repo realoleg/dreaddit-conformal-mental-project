@@ -10,34 +10,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
 from src.evaluate import build_metrics_row
+from src.utils import load_processed_split
 
 REQUIRED_COLUMNS = ["text", "label"]
-
-
-def load_processed_split(path: str | Path) -> pd.DataFrame:
-
-    """
-    Load one processed CSV split and validate the minimum required columns.
-    """
-
-    path = Path(path)
-    if not path.exists():
-        raise FileNotFoundError(f"Processed split not found: {path}")
-    
-    df = pd.read_csv(path)
-
-    missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
-    if missing:
-        raise ValueError(f"Missing required columns in {path.name}: {missing}")
-    
-    df = df.copy()
-    df["text"] = df["text"].astype(str)
-    df["label"] = df["label"].astype(int)
-
-    if "example_id" not in df.columns:
-        df.insert(0, "example_id", range(len(df)))
-
-    return df
 
 
 def build_baseline_models(
@@ -46,7 +21,7 @@ def build_baseline_models(
 ) -> dict[str, Pipeline]:
     
     """
-    Create two baseline pipelines used further
+    Create two baseline pipelines (tfidf+logreg; tfidf+linearSVM).
     """
 
     vectorized_kwargs = {
@@ -93,7 +68,7 @@ def fit_models(
 ) -> dict[str, Pipeline]:
     
     """
-    Fit each baseline model on training DataFrame
+    Fit each baseline model on training DataFrame.
     """
 
     x_train = train_df["text"].tolist()
@@ -112,7 +87,7 @@ def evaluate_models_on_split(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     
     """
-    Run predictions for all models on one split and return two df: metrics and predicitons
+    Run predictions for all models on one split and return two df: metrics and predicitons.
     """
 
     x = df["text"].tolist()
@@ -157,7 +132,7 @@ def save_models(
 ) -> None:
     
     """
-    Save fitted baseline pipelines for potential reuse
+    Save fitted baseline pipelines for potential reuse.
     """
 
     output_path = Path(output_dir)
@@ -167,4 +142,3 @@ def save_models(
         save_path = output_path / f"{model_name}.pkl"
         with open(save_path, "wb") as f:
             pickle.dump(model, f)
-

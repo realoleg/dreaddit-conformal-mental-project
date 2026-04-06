@@ -21,10 +21,11 @@ REQUIRED_COLUMNS = [
 
 
 def load_transformer_predictions(path: str | Path) -> pd.DataFrame:
+    
     """
-    Load saved transformer predictions and validate the columns required
-    for conformal post-processing.
+    Load saved transformer predictions and validate the columns required for conformal post-processing.
     """
+
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Transformer predictions file not found: {path}")
@@ -47,9 +48,11 @@ def load_transformer_predictions(path: str | Path) -> pd.DataFrame:
 
 
 def get_split_predictions(df: pd.DataFrame, split_name: str) -> pd.DataFrame:
+    
     """
     Select one split from the saved transformer predictions.
     """
+
     out = df[df["split"] == split_name].copy().reset_index(drop=True)
     if out.empty:
         raise ValueError(f"No rows found for split='{split_name}'.")
@@ -57,11 +60,13 @@ def get_split_predictions(df: pd.DataFrame, split_name: str) -> pd.DataFrame:
 
 
 def extract_probability_matrix(df: pd.DataFrame) -> np.ndarray:
+    
     """
     Extract the probability matrix of shape (n_samples, 2):
     column 0 -> not_stress
     column 1 -> stress
     """
+
     probs = df[["prob_not_stress", "prob_stress"]].to_numpy(dtype=float)
 
     if probs.ndim != 2 or probs.shape[1] != 2:
@@ -71,10 +76,12 @@ def extract_probability_matrix(df: pd.DataFrame) -> np.ndarray:
 
 
 def compute_lac_scores(probabilities: np.ndarray, true_labels: np.ndarray) -> np.ndarray:
+   
     """
     LAC nonconformity scores:
         score_i = 1 - p_true_label(x_i)
     """
+
     row_idx = np.arange(len(true_labels))
     true_class_probs = probabilities[row_idx, true_labels]
     scores = 1.0 - true_class_probs
@@ -82,12 +89,14 @@ def compute_lac_scores(probabilities: np.ndarray, true_labels: np.ndarray) -> np
 
 
 def compute_conformal_quantile(scores: np.ndarray, alpha: float) -> float:
+    
     """
     Split-conformal quantile with finite-sample correction:
         q_hat = Quantile(scores; ceil((n + 1) * (1 - alpha)) / n)
 
     Uses a conservative 'higher' rule.
     """
+
     if not 0.0 < alpha < 1.0:
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
 
@@ -107,10 +116,12 @@ def compute_conformal_quantile(scores: np.ndarray, alpha: float) -> float:
 
 
 def compute_probability_threshold(q_hat: float) -> float:
+    
     """
     Under LAC, include class y if:
         p_y(x) >= 1 - q_hat
     """
+
     threshold = 1.0 - q_hat
     return float(np.clip(threshold, 0.0, 1.0))
 
@@ -119,16 +130,20 @@ def build_prediction_set_mask(
     probabilities: np.ndarray,
     probability_threshold: float,
 ) -> np.ndarray:
+    
     """
     Build boolean prediction-set mask of shape (n_samples, 2).
     """
+
     return probabilities >= probability_threshold
 
 
 def format_prediction_set(mask_row: np.ndarray) -> str:
+   
     """
     Convert one boolean mask into a readable set string.
     """
+
     labels = [LABEL_NAMES[idx] for idx, include in enumerate(mask_row) if include]
     if not labels:
         return "{}"
@@ -139,12 +154,14 @@ def fit_lac_conformal(
     calibration_df: pd.DataFrame,
     alpha: float,
 ) -> tuple[float, float]:
+    
     """
     Fit split-conformal LAC on the calibration split.
 
     Returns:
         q_hat, probability_threshold
     """
+
     probabilities = extract_probability_matrix(calibration_df)
     true_labels = calibration_df["label"].to_numpy(dtype=int)
 
@@ -164,9 +181,11 @@ def build_conformal_prediction_frame(
     q_hat: float,
     probability_threshold: float,
 ) -> pd.DataFrame:
+    
     """
     Add conformal set-valued outputs to a copy of the original prediction DataFrame.
     """
+
     out = df.copy()
     probabilities = extract_probability_matrix(out)
     prediction_set_mask = build_prediction_set_mask(
@@ -218,9 +237,11 @@ def summarize_conformal_predictions(
     alpha: float,
     method_name: str = "lac",
 ) -> dict[str, Any]:
+    
     """
     Compute summary conformal metrics for one split.
     """
+    
     if prediction_df.empty:
         raise ValueError("prediction_df is empty.")
 

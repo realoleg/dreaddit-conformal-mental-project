@@ -6,7 +6,7 @@ from typing import Dict
 import pandas as pd 
 from datasets import load_dataset
 from sklearn.model_selection import train_test_split
-
+from src.utils import add_text_length_features
 
 REQUIRED_COLUMNS = ["text", "label", "subreddit"]
 
@@ -35,13 +35,6 @@ def keep_required_columns(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def add_basic_text_features(df: pd.DataFrame) -> pd.DataFrame:
-    out = df.copy()
-    out["text_lenght_chars"] = out["text"].str.len()
-    out["text_lenght_words"] = out["text"].str.split().str.len()
-    return out
-
-
 def make_train_calibration_split(
         train_df: pd.DataFrame,
         calibration_size: float = 0.2,
@@ -67,11 +60,10 @@ def save_splits(splits: Dict[str, pd.DataFrame], output_dir: str | Path) -> None
 def summarize_split(df: pd.DataFrame, split_name: str) -> str:
     n_rows = len(df)
     class_balance = df["label"].value_counts(normalize=True).sort_index().to_dict()
-    avg_words = float(df["text_lenght_words"].mean())
+    avg_words = float(df["text_length_words"].mean())
 
     return (
         f"{split_name}: n={n_rows}, "
         f"class_balance={class_balance}, "
         f"avg_words={avg_words:.2f}"
     )
-

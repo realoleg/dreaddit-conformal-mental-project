@@ -6,6 +6,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from src.utils import resolve_metric_column
+
 
 STRESS_TEST_ORDER = [
     "clean",
@@ -49,23 +51,6 @@ MODEL_COLORS = {
 def ensure_parent_dir(path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-
-
-def resolve_metric_column(df: pd.DataFrame, preferred: str = "macro_f1") -> str:
-    candidates = [
-        preferred,
-        preferred.replace("_", " "),
-        preferred.replace(" ", "_"),
-        "f1",
-        "accuracy",
-    ]
-    for candidate in candidates:
-        if candidate in df.columns:
-            return candidate
-
-    raise ValueError(
-        f"Could not resolve metric column. Available columns: {df.columns.tolist()}"
-    )
 
 
 def prettify_model_name(model_name: str) -> str:

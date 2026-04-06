@@ -4,22 +4,17 @@ from pathlib import Path
 import yaml
 
 from src.data import (
-    add_basic_text_features,
     keep_required_columns,
     load_dreaddit_dataset,
     make_train_calibration_split,
     save_splits,
     summarize_split,
 )
-
-
-def load_config(config_path: str = "configs/base.yaml") -> dict:
-    with open(config_path, "r",encoding="utf-8") as f:
-        return yaml.safe_load(f)
+from src.utils import load_yaml_config, add_text_length_features
 
 
 def main() -> None:
-    config = load_config()
+    config = load_yaml_config()
 
     seed = config["seed"]
     calibration_size = config["data"]["calibration_size"]
@@ -27,9 +22,9 @@ def main() -> None:
 
     raw_splits = load_dreaddit_dataset(config["data"]["dataset_name"])
 
-    train_df = add_basic_text_features(keep_required_columns(raw_splits["train"]))
-    validation_df = add_basic_text_features(keep_required_columns(raw_splits["validation"]))
-    test_df = add_basic_text_features(keep_required_columns(raw_splits["test"]))
+    train_df = add_text_length_features(keep_required_columns(raw_splits["train"]))
+    validation_df = add_text_length_features(keep_required_columns(raw_splits["validation"]))
+    test_df = add_text_length_features(keep_required_columns(raw_splits["test"]))
 
     proper_train_df, calibration_df = make_train_calibration_split(
         train_df=train_df,

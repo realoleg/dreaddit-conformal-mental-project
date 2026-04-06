@@ -24,25 +24,15 @@ from src.conformal import (
 )
 from src.evaluate import build_metrics_row
 from src.transformer import load_processed_split, stable_softmax
-
-
-def get_metric_column(metrics_df: pd.DataFrame) -> str:
-    """
-    Resolve the preferred metric column name from a metrics table.
-    """
-    for candidate in ["macro_f1", "macro f1", "f1", "accuracy"]:
-        if candidate in metrics_df.columns:
-            return candidate
-    raise ValueError(
-        "Could not find a supported metric column. "
-        f"Available columns: {metrics_df.columns.tolist()}"
-    )
+from src.utils import resolve_metric_column, add_text_length_features
 
 
 def select_best_baseline_model_name(metrics_path: str | Path) -> str:
+   
     """
     Select the best baseline model using validation performance.
     """
+
     metrics_path = Path(metrics_path)
     if not metrics_path.exists():
         raise FileNotFoundError(f"Baseline metrics file not found: {metrics_path}")
@@ -53,16 +43,18 @@ def select_best_baseline_model_name(metrics_path: str | Path) -> str:
     if validation_df.empty:
         raise ValueError("No validation rows found in baseline metrics file.")
 
-    metric_column = get_metric_column(validation_df)
+    metric_column = resolve_metric_column(validation_df, preferred="macro_f1")
     best_row = validation_df.sort_values(metric_column, ascending=False).iloc[0]
 
     return str(best_row["model_name"])
 
 
 def load_pickled_model(path: str | Path):
+    
     """
     Load a fitted sklearn model from pickle.
     """
+
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Pickled model not found: {path}")
@@ -72,10 +64,12 @@ def load_pickled_model(path: str | Path):
 
 
 def truncate_text(text: str, fraction: float) -> str:
+   
     """
     Keep only the first given fraction of whitespace-tokenized words.
     Always keeps at least one word if the input is non-empty.
     """
+
     words = text.split()
     if not words:
         return text
@@ -85,11 +79,13 @@ def truncate_text(text: str, fraction: float) -> str:
 
 
 def random_word_deletion(text: str, deletion_prob: float, seed: int) -> str:
+    
     """
     Randomly delete words with a fixed probability.
     Uses a deterministic seed so the perturbation is reproducible.
     Always keeps at least one word if the input is non-empty.
     """
+
     words = text.split()
     if len(words) <= 1:
         return text
@@ -105,25 +101,17 @@ def random_word_deletion(text: str, deletion_prob: float, seed: int) -> str:
     return " ".join(kept_words)
 
 
-def add_text_length_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Recompute simple text length features after perturbation.
-    """
-    out = df.copy()
-    out["text_length_chars"] = out["text"].astype(str).str.len()
-    out["text_length_words"] = out["text"].astype(str).str.split().str.len()
-    return out
-
-
 def build_stress_test_splits(
     test_df: pd.DataFrame,
     truncate_fracs: list[float],
     deletion_probs: list[float],
     seed: int,
 ) -> dict[str, pd.DataFrame]:
+    
     """
     Build the clean and degraded variants of the test split.
     """
+
     variants: dict[str, pd.DataFrame] = {}
 
     clean_df = test_df.copy()
@@ -170,9 +158,11 @@ def build_point_prediction_frame(
     probabilities: np.ndarray | None = None,
     logits: np.ndarray | None = None,
 ) -> pd.DataFrame:
+    
     """
     Build a tidy prediction table for baseline or transformer point predictions.
     """
+
     base_columns = ["example_id", "text", "label"]
     optional_columns = [
         "original_text",
@@ -209,9 +199,11 @@ def predict_with_baseline(
     model_name: str,
     stress_test_name: str,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
+    
     """
     Run one fitted baseline model on one stress-test split.
     """
+
     x = df["text"].astype(str).tolist()
     y_true = df["label"].to_numpy(dtype=int)
     y_pred = model.predict(x).astype(int)
@@ -239,10 +231,12 @@ def load_saved_transformer(
     checkpoint_dir: str | Path,
     fallback_model_name: str,
 ) -> tuple[Any, Any]:
+    
     """
     Load the saved transformer checkpoint and tokenizer.
     Falls back to the base tokenizer name if tokenizer files are absent.
     """
+
     checkpoint_dir = Path(checkpoint_dir)
     if not checkpoint_dir.exists():
         raise FileNotFoundError(f"Transformer checkpoint directory not found: {checkpoint_dir}")
@@ -262,9 +256,11 @@ def build_tokenized_inference_dataset(
     tokenizer,
     max_length: int,
 ) -> Dataset:
+    
     """
     Convert a pandas DataFrame into a tokenized Hugging Face Dataset for inference.
     """
+
     dataset = Dataset.from_pandas(df, preserve_index=False)
     dataset = dataset.rename_column("label", "labels")
 
@@ -290,9 +286,11 @@ def build_inference_trainer(
     batch_size: int,
     output_dir: str | Path,
 ) -> Trainer:
+    
     """
     Build a lightweight Trainer for batched transformer inference.
     """
+
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     args = TrainingArguments(
@@ -317,9 +315,11 @@ def predict_with_transformer(
     stress_test_name: str,
     max_length: int,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
+    
     """
     Run the saved transformer checkpoint on one stress-test split.
     """
+
     dataset = build_tokenized_inference_dataset(
         df=df,
         tokenizer=tokenizer,
@@ -359,10 +359,12 @@ def build_conformal_metrics_and_predictions(
     stress_test_name: str,
     method_name: str = "lac",
 ) -> tuple[list[dict[str, Any]], list[pd.DataFrame]]:
+    
     """
     Apply split-conformal post-processing to one transformer prediction table.
     Calibration always comes from the clean held-out calibration split.
     """
+
     metrics_rows: list[dict[str, Any]] = []
     prediction_frames: list[pd.DataFrame] = []
 
@@ -399,9 +401,11 @@ def build_conformal_metrics_and_predictions(
 def load_clean_calibration_predictions(
     path: str | Path,
 ) -> pd.DataFrame:
+    
     """
     Load the saved clean transformer predictions and return the calibration split.
     """
+
     transformer_predictions = load_transformer_predictions(path)
     return get_split_predictions(transformer_predictions, "calibration")
 

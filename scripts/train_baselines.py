@@ -13,6 +13,7 @@ from src.baselines import(
     load_processed_split,
     save_models,
 )
+from src.utils import load_yaml_config
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,16 +25,11 @@ def parse_args() -> argparse.Namespace:
         help="Path to YAML config.",
     )
     return parser.parse_args()
-
-
-def load_config(config_path: str) -> dict:
-    with open(config_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
     
 
 def main() -> None:
     args = parse_args()
-    config = load_config(args.config)
+    config = load_yaml_config(args.config)
 
     data_dir = Path(config["data"]["output_dir"])
     max_features = int(config["baselines"]["max_features"])

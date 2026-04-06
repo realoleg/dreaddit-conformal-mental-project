@@ -8,8 +8,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 def compute_classification_metrics(y_true, y_pred) -> dict[str, float]:
     
     """
-    Here we compute standart binary classification metrics.
-
+    Compute standart binary classification metrics.
     Returns a dictionary with accuracy, precision, recall, binary F1 and macro F1.
     """
 

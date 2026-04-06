@@ -16,40 +16,15 @@ from transformers import (
 )
 
 from src.evaluate import build_metrics_row, compute_classification_metrics
+from src.utils import load_processed_split
 
 REQUIRED_COLUMNS = ["text", "label"]
-
-
-def load_processed_split(path: str | Path) -> pd.DataFrame:
-
-    """
-    Load one processed CSV split and validate the minimum required columns.
-    """
-
-    path = Path(path)
-    if not path.exists():
-        raise FileNotFoundError(f"Processed split not found: {path}")
-    
-    df = pd.read_csv(path)
-
-    missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
-    if missing:
-        raise ValueError(f"Missing required columns in {path.name}: {missing}")
-    
-    df = df.copy()
-    df["text"] = df["text"].astype(str)
-    df["label"] = df["label"].astype(int)
-
-    if "example_id" not in df.columns:
-        df.insert(0, "example_id", range(len(df)))
-
-    return df
 
 
 def load_transformer_splits(data_dir: str | Path) -> dict[str, pd.DataFrame]:
 
     """
-    Load all processed splits needed for transformer
+    Load all processed splits needed for transformer.
     """
 
     data_dir = Path(data_dir)
@@ -65,7 +40,7 @@ def load_transformer_splits(data_dir: str | Path) -> dict[str, pd.DataFrame]:
 def get_label_mappings() -> tuple[dict[str, int], dict[int, str]]:
 
     """
-    Dreaddit is a binary stress classification task
+    Dreaddit is a binary stress classification task.
     """
 
     label2id = {
@@ -83,7 +58,7 @@ def build_tokenized_splits(
 ) -> tuple[Any, dict[str, Dataset]]:
     
     """
-    Here we are building a tokenizer and tokenize each split into a Hugging Face dataset
+    Builds a tokenizer and tokenize each split into a Hugging Face dataset.
     """
 
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
@@ -115,7 +90,7 @@ def build_tokenized_splits(
 def compute_trainer_metrics(eval_pred) -> dict[str, float]:
 
     """
-    Metric function used by Hugging Face trainer
+    Metric function used by Hugging Face trainer.
     """
 
     logits, labels = eval_pred
@@ -136,7 +111,7 @@ def build_trainer(
 ) -> tuple[Trainer, Any]:
     
     """
-    Create the model, tokenizer-related collation, training arguments, and trainer
+    Create the model, tokenizer-related collation, training arguments, and trainer.
     """
 
     label2id, id2label = get_label_mappings()
@@ -185,7 +160,7 @@ def build_trainer(
 def stable_softmax(logits: np.ndarray) -> np.ndarray:
 
     """
-    Numerically stable softmax for turning logits into probabilities
+    Numerically stable softmax for turning logits into probabilities.
     """
 
     shifted = logits - np.max(logits, axis=1, keepdims=True)
@@ -201,7 +176,7 @@ def build_prediciton_frame(
 ) -> pd.DataFrame:
     
     """
-    Build a tidy prediciton table with logits, probabilities, and hard predicitons
+    Build a tidy prediciton table with logits, probabilities, and hard predicitons.
     """
 
     probabilities = stable_softmax(logits)
@@ -236,7 +211,7 @@ def predict_on_split(
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     
     """
-    Run prediction on one split and return: one metrics row, one predictions dataframe
+    Run prediction on one split and return: one metrics row, one predictions dataframe.
     """
 
     prediction_output = trainer.predict(dataset)
@@ -262,7 +237,7 @@ def predict_on_split(
 def save_training_metrics(metrics: dict[str, Any], output_path: str | Path) -> None:
     
     """
-    Save training metrics to JSON
+    Save training metrics to JSON.
     """
 
     import json
@@ -277,7 +252,7 @@ def save_training_metrics(metrics: dict[str, Any], output_path: str | Path) -> N
 def initialise_seed(seed: int) -> None:
 
     """
-    Set random seed for transformer / numpy / pytorch if needed
+    Set random seed for transformer / numpy / pytorch if needed.
     """
 
     set_seed(seed)
