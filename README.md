@@ -159,16 +159,17 @@ dreaddit-conformal-mental-project/
 
 
 
-# actual to-do list
+# known issues and actual to-do list
 
-clean up common functions in different /src .py and move them utils.py
-
-clean up comments on same functions
+do step-by-step guide on building project
 
 do comments on repo structure
 
 do something with .ipynb ... don't know what yet ... (probably exploratory data analysis of whole dreaddit)
 
 think about adding a causal layer and how it lays with project
+
+!!! I've made a grammar mistake in naming functions (src/data/def add_basic_text_features) and (src/stress_tests/def add_basic_features) -> text_lengTH and text_lengHT
+**I've fixed it** and moved to utils.py , but fixing will change columns naming in data/processed/*.csv , so after dealing with it **I may rerun** whole pipeline to make final version and results will drift a bit and affecting a README summary
 
 ---
