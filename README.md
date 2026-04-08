@@ -156,12 +156,39 @@ dreaddit-conformal-mental-project/
 
 ---
 
+# Reproducibility
+This project uses `uv` for environment management.
 
+## Install dependencies
+```text
+uv sync
+```
 
+## Run the pipeline step-by-step
+```text
+uv run python -m scripts.prepare_data
+uv run python -m scripts.train_baselines
+uv run python -m scripts.train_transformer
+uv run python -m scripts.conformal_layer
+uv run python -m scripts.stress_tests
+uv run python -m scripts.make_report_assets
+```
 
-# known issues and actual to-do list
+## Outputs
+Key outputs are saved under:
+- `results/tables/`
+  - clean metrics
+  - stress-test classification metrics
+  - conformal metrics
+  - final summary table
+- `results/figures`
+  - clean comparison figure
+  - stress-test classification figure
+  - confrmal figures
 
-do step-by-step guide on building project
+---
+
+# known issues and to-do list
 
 do comments on repo structure
 
